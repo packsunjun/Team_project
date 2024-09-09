@@ -472,73 +472,60 @@ class _StudentManagementPageState extends State<StudentManagementPage> {
           // 검색 및 필터링 영역
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.2),
-                    spreadRadius: 2,
-                    blurRadius: 5,
-                    offset: Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  // 검색창
-                  Expanded(
-                    flex: 1,
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: TextField(
-                        decoration: InputDecoration(
-                          prefixIcon: Icon(Icons.search),
-                          labelText: '학생 이름 검색',
-                          border: OutlineInputBorder(),
-                        ),
-                        onChanged: (value) {
-                          setState(() {
-                            _searchQuery = value;
-                            _filterStudents();
-                          });
-                        },
-                      ),
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: TextField(
+                    decoration: InputDecoration(
+                      prefixIcon: Icon(Icons.search),
+                      labelText: '학생 이름 검색',
+                      border: OutlineInputBorder(),
                     ),
+                    onChanged: (value) {
+                      setState(() {
+                        _searchQuery = value;
+                        _filterStudents();
+                      });
+                    },
                   ),
-                  // 요일 필터
-                  Expanded(
-                    flex: 2,
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Wrap(
-                        spacing: 8.0,
-                        runSpacing: 4.0,
-                        children: ['월', '화', '수', '목', '금', '토', '일']
-                            .map((day) => FilterChip(
-                          label: Text(day),
-                          selected: _selectedDays.contains(day),
-                          onSelected: (selected) {
-                            setState(() {
-                              if (selected) {
-                                _selectedDays.add(day);
-                              } else {
-                                _selectedDays.remove(day);
-                              }
-                              _filterStudents();
-                            });
-                          },
-                        ))
-                            .toList(),
-                      ),
-                    ),
+                ),
+                SizedBox(width: 10),
+                Expanded(
+                  flex: 3,
+                  child: Wrap(
+                    spacing: 8.0,
+                    runSpacing: 4.0,
+                    children: ['월', '화', '수', '목', '금', '토', '일']
+                        .map((day) => FilterChip(
+                      label: Text(day),
+                      selected: _selectedDays.contains(day),
+                      onSelected: (selected) {
+                        setState(() {
+                          if (selected) {
+                            _selectedDays.add(day);
+                          } else {
+                            _selectedDays.remove(day);
+                          }
+                          _filterStudents();
+                        });
+                      },
+                    ))
+                        .toList(),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
+          SizedBox(height: 10),
           // 학생 리스트
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              '총 학생 수: ${_filteredStudents.length}',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ),
           Expanded(
             child: ListView.builder(
               itemCount: _filteredStudents.length,
@@ -548,7 +535,7 @@ class _StudentManagementPageState extends State<StudentManagementPage> {
                   margin: EdgeInsets.symmetric(vertical: 5, horizontal: 8),
                   child: ListTile(
                     contentPadding: EdgeInsets.all(12),
-                    title: Text(student.studentName),
+                    title: Text('${index + 1}. ${student.studentName}'),
                     subtitle: Text('수업 요일: ${student.classDays.join(', ')}'),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -612,6 +599,7 @@ class _StudentManagementPageState extends State<StudentManagementPage> {
   }
 }
 
+
 class AddStudentDialog extends StatefulWidget {
   final void Function(Student) onAddStudent;
 
@@ -626,6 +614,29 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
   final _parentPhoneController = TextEditingController();
   final _studentNameController = TextEditingController();
   List<String> _selectedDays = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _parentPhoneController.addListener(() {
+      final text = _parentPhoneController.text;
+      // 자동 하이픈 추가
+      if (text.length > 3 && !text.contains('-')) {
+        final formatted = text.replaceRange(3, 4, '-');
+        _parentPhoneController.value = TextEditingValue(
+          text: formatted,
+          selection: TextSelection.fromPosition(TextPosition(offset: formatted.length)),
+        );
+      }
+      // 입력 길이 제한
+      if (text.length > 13) { // 예를 들어, 13자는 하이픈 포함 11자리 전화번호
+        _parentPhoneController.value = TextEditingValue(
+          text: text.substring(0, 13),
+          selection: TextSelection.fromPosition(TextPosition(offset: text.substring(0, 13).length)),
+        );
+      }
+    });
+  }
 
   void _onSubmit() {
     final parentName = _parentNameController.text;
@@ -642,6 +653,21 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
       );
       widget.onAddStudent(student);
       Navigator.of(context).pop();
+    } else {
+      // 유효성 검사 실패 시 알림
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('오류'),
+          content: Text('학부모 이름과 학생 이름을 입력해야 합니다.'),
+          actions: [
+            TextButton(
+              child: Text('확인'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ],
+        ),
+      );
     }
   }
 
@@ -649,31 +675,34 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text('학생 추가'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            controller: _parentNameController,
-            decoration: InputDecoration(labelText: '학부모 이름'),
-          ),
-          TextField(
-            controller: _parentPhoneController,
-            decoration: InputDecoration(labelText: '학부모 전화번호'),
-            keyboardType: TextInputType.phone,
-          ),
-          TextField(
-            controller: _studentNameController,
-            decoration: InputDecoration(labelText: '학생 이름'),
-          ),
-          MultiSelectCheckbox(
-            selectedDays: _selectedDays,
-            onSelectionChanged: (days) {
-              setState(() {
-                _selectedDays = days;
-              });
-            },
-          ),
-        ],
+      content: Container(
+        width: 300,
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            TextFormField(
+              controller: _parentNameController,
+              decoration: InputDecoration(labelText: '학부모 이름'),
+            ),
+            TextFormField(
+              controller: _parentPhoneController,
+              decoration: InputDecoration(labelText: '학부모 전화번호'),
+              keyboardType: TextInputType.phone,
+            ),
+            TextFormField(
+              controller: _studentNameController,
+              decoration: InputDecoration(labelText: '학생 이름'),
+            ),
+            MultiSelectCheckbox(
+              selectedDays: _selectedDays,
+              onSelectionChanged: (days) {
+                setState(() {
+                  _selectedDays = days;
+                });
+              },
+            ),
+          ],
+        ),
       ),
       actions: [
         TextButton(
@@ -712,6 +741,40 @@ class _EditStudentDialogState extends State<EditStudentDialog> {
     _parentPhoneController = TextEditingController(text: widget.student.parentPhoneNumber);
     _studentNameController = TextEditingController(text: widget.student.studentName);
     _selectedDays = List.from(widget.student.classDays);
+
+    _parentPhoneController.addListener(() {
+      final text = _parentPhoneController.text;
+      final newText = _formatPhoneNumber(text);
+
+      if (text != newText) {
+        _parentPhoneController.value = TextEditingValue(
+          text: newText,
+          selection: TextSelection.fromPosition(TextPosition(offset: newText.length)),
+        );
+      }
+
+      // 입력 길이 제한
+      if (newText.length > 13) { // 하이픈 포함 11자리 전화번호
+        _parentPhoneController.value = TextEditingValue(
+          text: newText.substring(0, 13),
+          selection: TextSelection.fromPosition(TextPosition(offset: newText.substring(0, 13).length)),
+        );
+      }
+    });
+  }
+
+  String _formatPhoneNumber(String text) {
+    final digitsOnly = text.replaceAll(RegExp(r'\D'), ''); // 숫자만 추출
+    final buffer = StringBuffer();
+
+    for (int i = 0; i < digitsOnly.length; i++) {
+      if (i == 3 || i == 7) {
+        buffer.write('-');
+      }
+      buffer.write(digitsOnly[i]);
+    }
+
+    return buffer.toString();
   }
 
   void _onSubmit() {
@@ -729,6 +792,21 @@ class _EditStudentDialogState extends State<EditStudentDialog> {
       );
       widget.onUpdateStudent(updatedStudent);
       Navigator.of(context).pop();
+    } else {
+      // 유효성 검사 실패 시 알림
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('오류'),
+          content: Text('학부모 이름과 학생 이름을 입력해야 합니다.'),
+          actions: [
+            TextButton(
+              child: Text('확인'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ],
+        ),
+      );
     }
   }
 
@@ -736,31 +814,34 @@ class _EditStudentDialogState extends State<EditStudentDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text('학생 수정'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            controller: _parentNameController,
-            decoration: InputDecoration(labelText: '학부모 이름'),
-          ),
-          TextField(
-            controller: _parentPhoneController,
-            decoration: InputDecoration(labelText: '학부모 전화번호'),
-            keyboardType: TextInputType.phone,
-          ),
-          TextField(
-            controller: _studentNameController,
-            decoration: InputDecoration(labelText: '학생 이름'),
-          ),
-          MultiSelectCheckbox(
-            selectedDays: _selectedDays,
-            onSelectionChanged: (days) {
-              setState(() {
-                _selectedDays = days;
-              });
-            },
-          ),
-        ],
+      content: Container(
+        width: 300,
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            TextFormField(
+              controller: _parentNameController,
+              decoration: InputDecoration(labelText: '학부모 이름'),
+            ),
+            TextFormField(
+              controller: _parentPhoneController,
+              decoration: InputDecoration(labelText: '학부모 전화번호'),
+              keyboardType: TextInputType.phone,
+            ),
+            TextFormField(
+              controller: _studentNameController,
+              decoration: InputDecoration(labelText: '학생 이름'),
+            ),
+            MultiSelectCheckbox(
+              selectedDays: _selectedDays,
+              onSelectionChanged: (days) {
+                setState(() {
+                  _selectedDays = days;
+                });
+              },
+            ),
+          ],
+        ),
       ),
       actions: [
         TextButton(
@@ -808,6 +889,7 @@ class _MultiSelectCheckboxState extends State<MultiSelectCheckbox> {
               } else {
                 widget.selectedDays.remove(day);
               }
+              widget.selectedDays.sort((a, b) => _daysOfWeek.indexOf(a).compareTo(_daysOfWeek.indexOf(b)));
               widget.onSelectionChanged(widget.selectedDays);
             });
           },
