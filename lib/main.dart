@@ -1,125 +1,818 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: PageView1_Home(), // 첫 페이지 설정
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+// 홈 페이지
+class PageView1_Home extends StatefulWidget {
+  const PageView1_Home({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  _PageView1_HomeState createState() => _PageView1_HomeState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _PageView1_HomeState extends State<PageView1_Home> {
+  String _input = '';
 
-  void _incrementCounter() {
+  void _onButtonClick(String value) {
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+      if (_input.length < 4) {
+        _input += value;
+      }
+
+      if (_input.length == 4) {
+        _showConfirmationDialog();
+      }
+    });
+  }
+
+  void _onBackspace() {
+    setState(() {
+      if (_input.isNotEmpty) {
+        _input = _input.substring(0, _input.length - 1);
+      }
+    });
+  }
+
+  void _onCheck() {
+    if (_input.length == 4) {
+      _showConfirmationDialog();
+    }
+  }
+
+  void _showConfirmationDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('확인'),
+          content: Text('입력된 번호는 $_input 입니다.'),
+          actions: [
+            TextButton(
+              child: Text('확인'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                setState(() {
+                  _input = ''; // 입력 초기화
+                });
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('학원 출석 앱', style: TextStyle(fontWeight: FontWeight.w700)),
+        backgroundColor: Colors.lightGreen,
+      ),
+      drawer: Drawer(
+        child: ListView(
+          children: [
+            UserAccountsDrawerHeader(
+              currentAccountPicture: CircleAvatar(
+                backgroundImage: AssetImage('character.png'),
+              ),
+              accountName: Text('안민J 컴퓨터', style: TextStyle(fontSize: 20)),
+              accountEmail: Text('TEL. 051-527-5002'),
+            ),
+            ListTile(
+              leading: Icon(Icons.home),
+              iconColor: Colors.purple,
+              focusColor: Colors.purple,
+              title: Text('홈'),
+              onTap: () {
+                Navigator.pop(context);
+              },
+              trailing: Icon(Icons.navigate_next),
+            ),
+            ListTile(
+              leading: Icon(Icons.scale),
+              iconColor: Colors.purple,
+              focusColor: Colors.purple,
+              title: Text('학생 관리'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => StudentManagementPage(),
+                  ),
+                );
+              },
+              trailing: Icon(Icons.navigate_next),
+            ),
+            ListTile(
+              leading: Icon(Icons.settings),
+              iconColor: Colors.purple,
+              focusColor: Colors.purple,
+              title: Text('설정'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PageView5_Settings(),
+                  ),
+                );
+              },
+              trailing: Icon(Icons.navigate_next),
+            ),
+          ],
+        ),
+      ),
+      body: Row(
+        children: [
+          // 왼쪽 이미지 영역
+          Expanded(
+            flex: 2,
+            child: Container(
+              padding: EdgeInsets.all(20.0),
+              child: Image.asset('1.jpg', fit: BoxFit.cover),
+            ),
+          ),
+          // 오른쪽 숫자 패드 및 입력된 숫자 표시 영역
+          Expanded(
+            flex: 1,
+            child: Column(
+              children: [
+                SizedBox(height: 20),
+                // 입력된 숫자를 표시하는 부분
+                Text(
+                  _input,
+                  style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 20),
+                Expanded(
+                  child: GridView.builder(
+                    padding: EdgeInsets.all(10.0),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      childAspectRatio: 1.0,
+                      crossAxisSpacing: 10.0,
+                      mainAxisSpacing: 10.0,
+                    ),
+                    itemCount: 12,
+                    itemBuilder: (context, index) {
+                      if (index < 9) {
+                        return ElevatedButton(
+                          onPressed: () => _onButtonClick('${index + 1}'),
+                          child: Text('${index + 1}'),
+                        );
+                      } else if (index == 9) {
+                        return ElevatedButton(
+                          onPressed: _onBackspace,
+                          child: Icon(Icons.backspace),
+                        );
+                      } else if (index == 10) {
+                        return ElevatedButton(
+                          onPressed: () => _onButtonClick('0'),
+                          child: Text('0'),
+                        );
+                      } else {
+                        return ElevatedButton(
+                          onPressed: _onCheck,
+                          child: Icon(Icons.check),
+                        );
+                      }
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: BottomAppBar(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            IconButton(
+              icon: Icon(Icons.home),
+              onPressed: () {
+                // 이미 홈 페이지에 있으므로 아무 동작을 하지 않도록 설정
+              },
+            ),
+            IconButton(
+              icon: Icon(Icons.settings),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PageView5_Settings(),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// 설정 페이지
+class PageView5_Settings extends StatefulWidget {
+  const PageView5_Settings({super.key});
+
+  @override
+  _PageView5_SettingsState createState() => _PageView5_SettingsState();
+}
+
+class _PageView5_SettingsState extends State<PageView5_Settings> {
+  bool _isCodeHidden = true;
+  bool _autoCheckInOut = false;
+
+  void _toggleCodeVisibility() {
+    setState(() {
+      _isCodeHidden = !_isCodeHidden;
+    });
+  }
+
+  void _toggleAutoCheckInOut(bool value) {
+    setState(() {
+      _autoCheckInOut = value;
+    });
+  }
+
+  void _navigateToPasswordChange(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PasswordChangePage(),
+      ),
+    );
+  }
+
+  void _navigateToAttendanceCode(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AttendanceCodePage(
+          isCodeHidden: _isCodeHidden,
+          toggleCodeVisibility: _toggleCodeVisibility,
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('설정 페이지'),
+      ),
+      body: ListView(
+        children: [
+          // 비밀번호 변경으로 이동
+          ListTile(
+            leading: Icon(Icons.lock),
+            title: Text('비밀번호 변경'),
+            onTap: () => _navigateToPasswordChange(context),
+            trailing: Icon(Icons.navigate_next),
+          ),
+          Divider(),
+
+          // 등하원 자동처리로 이동
+          SwitchListTile(
+            title: Text('등하원 자동처리'),
+            value: _autoCheckInOut,
+            onChanged: _toggleAutoCheckInOut,
+            secondary: Icon(Icons.school),
+          ),
+          Divider(),
+
+          // 출석체크 코드 숨기기 설정
+          ListTile(
+            leading: Icon(Icons.code),
+            title: Text('출석체크 코드 숨기기'),
+            trailing: IconButton(
+              icon: Icon(_isCodeHidden ? Icons.visibility_off : Icons.visibility),
+              onPressed: _toggleCodeVisibility,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// 비밀번호 변경 페이지
+class PasswordChangePage extends StatefulWidget {
+  @override
+  _PasswordChangePageState createState() => _PasswordChangePageState();
+}
+
+class _PasswordChangePageState extends State<PasswordChangePage> {
+  String _oldPassword = '';
+  String _newPassword = '';
+
+  void _changePassword() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('비밀번호가 성공적으로 변경되었습니다.')),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('비밀번호 변경'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            TextField(
+              obscureText: true,
+              decoration: InputDecoration(labelText: '현재 비밀번호'),
+              onChanged: (value) {
+                setState(() {
+                  _oldPassword = value;
+                });
+              },
+            ),
+            TextField(
+              obscureText: true,
+              decoration: InputDecoration(labelText: '새 비밀번호'),
+              onChanged: (value) {
+                setState(() {
+                  _newPassword = value;
+                });
+              },
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _changePassword,
+              child: Text('비밀번호 변경'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// 출석 체크 코드 페이지
+class AttendanceCodePage extends StatelessWidget {
+  final bool isCodeHidden;
+  final VoidCallback toggleCodeVisibility;
+
+  AttendanceCodePage({required this.isCodeHidden, required this.toggleCodeVisibility});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('출석 체크 코드'),
+      ),
+      body: Center(
+        child: Text(
+          isCodeHidden ? '출석 체크 코드가 숨겨져 있습니다.' : '출석 체크 코드: 1234',
+          style: TextStyle(fontSize: 20),
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: toggleCodeVisibility,
+        child: Icon(isCodeHidden ? Icons.visibility : Icons.visibility_off),
+      ),
+    );
+  }
+}
+
+class Student {
+  String parentName;
+  String parentPhoneNumber;
+  String studentName;
+  List<String> classDays;
+
+  Student({
+    required this.parentName,
+    required this.parentPhoneNumber,
+    required this.studentName,
+    required this.classDays,
+  });
+}
+
+// 학생 관리 페이지
+class StudentManagementPage extends StatefulWidget {
+  @override
+  _StudentManagementPageState createState() => _StudentManagementPageState();
+}
+
+class _StudentManagementPageState extends State<StudentManagementPage> {
+  final List<Student> _students = [];
+  List<Student> _filteredStudents = [];
+  List<String> _selectedDays = [];
+  String _searchQuery = '';
+
+  void _addStudent(Student student) {
+    setState(() {
+      _students.add(student);
+      _filterStudents();
+    });
+  }
+
+  void _updateStudent(Student updatedStudent) {
+    setState(() {
+      final index = _students.indexWhere((s) => s.studentName == updatedStudent.studentName);
+      if (index != -1) {
+        _students[index] = updatedStudent;
+        _filterStudents();
+      }
+    });
+  }
+
+  void _deleteStudent(String studentName) {
+    setState(() {
+      _students.removeWhere((s) => s.studentName == studentName);
+      _filterStudents();
+    });
+  }
+
+  void _filterStudents() {
+    setState(() {
+      _filteredStudents = _students.where((student) {
+        final matchesSearchQuery = student.studentName.contains(_searchQuery);
+        final matchesDaysFilter = _selectedDays.isEmpty ||
+            student.classDays.any((day) => _selectedDays.contains(day));
+        return matchesSearchQuery && matchesDaysFilter;
+      }).toList();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+        title: Text('학생 관리'),
+        backgroundColor: Colors.blueAccent,
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
+      body: Column(
+        children: [
+          // 검색 및 필터링 영역
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.2),
+                    spreadRadius: 2,
+                    blurRadius: 5,
+                    offset: Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  // 검색창
+                  Expanded(
+                    flex: 1,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: TextField(
+                        decoration: InputDecoration(
+                          prefixIcon: Icon(Icons.search),
+                          labelText: '학생 이름 검색',
+                          border: OutlineInputBorder(),
+                        ),
+                        onChanged: (value) {
+                          setState(() {
+                            _searchQuery = value;
+                            _filterStudents();
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+                  // 요일 필터
+                  Expanded(
+                    flex: 2,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Wrap(
+                        spacing: 8.0,
+                        runSpacing: 4.0,
+                        children: ['월', '화', '수', '목', '금', '토', '일']
+                            .map((day) => FilterChip(
+                          label: Text(day),
+                          selected: _selectedDays.contains(day),
+                          onSelected: (selected) {
+                            setState(() {
+                              if (selected) {
+                                _selectedDays.add(day);
+                              } else {
+                                _selectedDays.remove(day);
+                              }
+                              _filterStudents();
+                            });
+                          },
+                        ))
+                            .toList(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+          ),
+          // 학생 리스트
+          Expanded(
+            child: ListView.builder(
+              itemCount: _filteredStudents.length,
+              itemBuilder: (context, index) {
+                final student = _filteredStudents[index];
+                return Card(
+                  margin: EdgeInsets.symmetric(vertical: 5, horizontal: 8),
+                  child: ListTile(
+                    contentPadding: EdgeInsets.all(12),
+                    title: Text(student.studentName),
+                    subtitle: Text('수업 요일: ${student.classDays.join(', ')}'),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: Icon(Icons.edit, color: Colors.blue),
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => EditStudentDialog(
+                                student: student,
+                                onUpdateStudent: _updateStudent,
+                              ),
+                            );
+                          },
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.delete, color: Colors.red),
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: Text('학생 삭제'),
+                                content: Text('정말로 이 학생을 삭제하시겠습니까?'),
+                                actions: [
+                                  TextButton(
+                                    child: Text('취소'),
+                                    onPressed: () => Navigator.of(context).pop(),
+                                  ),
+                                  ElevatedButton(
+                                    child: Text('삭제'),
+                                    onPressed: () {
+                                      _deleteStudent(student.studentName);
+                                      Navigator.of(context).pop();
+                                    },
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
-          ],
-        ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+        child: Icon(Icons.add),
+        onPressed: () {
+          showDialog(
+            context: context,
+            builder: (context) => AddStudentDialog(onAddStudent: _addStudent),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class AddStudentDialog extends StatefulWidget {
+  final void Function(Student) onAddStudent;
+
+  AddStudentDialog({required this.onAddStudent});
+
+  @override
+  _AddStudentDialogState createState() => _AddStudentDialogState();
+}
+
+class _AddStudentDialogState extends State<AddStudentDialog> {
+  final _parentNameController = TextEditingController();
+  final _parentPhoneController = TextEditingController();
+  final _studentNameController = TextEditingController();
+  List<String> _selectedDays = [];
+
+  void _onSubmit() {
+    final parentName = _parentNameController.text;
+    final parentPhoneNumber = _parentPhoneController.text;
+    final studentName = _studentNameController.text;
+    final classDays = _selectedDays;
+
+    if (parentName.isNotEmpty && studentName.isNotEmpty) {
+      final student = Student(
+        parentName: parentName,
+        parentPhoneNumber: parentPhoneNumber,
+        studentName: studentName,
+        classDays: classDays,
+      );
+      widget.onAddStudent(student);
+      Navigator.of(context).pop();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('학생 추가'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _parentNameController,
+            decoration: InputDecoration(labelText: '학부모 이름'),
+          ),
+          TextField(
+            controller: _parentPhoneController,
+            decoration: InputDecoration(labelText: '학부모 전화번호'),
+            keyboardType: TextInputType.phone,
+          ),
+          TextField(
+            controller: _studentNameController,
+            decoration: InputDecoration(labelText: '학생 이름'),
+          ),
+          MultiSelectCheckbox(
+            selectedDays: _selectedDays,
+            onSelectionChanged: (days) {
+              setState(() {
+                _selectedDays = days;
+              });
+            },
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          child: Text('취소'),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        ElevatedButton(
+          child: Text('추가'),
+          onPressed: _onSubmit,
+        ),
+      ],
+    );
+  }
+}
+
+class EditStudentDialog extends StatefulWidget {
+  final Student student;
+  final void Function(Student) onUpdateStudent;
+
+  EditStudentDialog({required this.student, required this.onUpdateStudent});
+
+  @override
+  _EditStudentDialogState createState() => _EditStudentDialogState();
+}
+
+class _EditStudentDialogState extends State<EditStudentDialog> {
+  late final TextEditingController _parentNameController;
+  late final TextEditingController _parentPhoneController;
+  late final TextEditingController _studentNameController;
+  List<String> _selectedDays = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _parentNameController = TextEditingController(text: widget.student.parentName);
+    _parentPhoneController = TextEditingController(text: widget.student.parentPhoneNumber);
+    _studentNameController = TextEditingController(text: widget.student.studentName);
+    _selectedDays = List.from(widget.student.classDays);
+  }
+
+  void _onSubmit() {
+    final parentName = _parentNameController.text;
+    final parentPhoneNumber = _parentPhoneController.text;
+    final studentName = _studentNameController.text;
+    final classDays = _selectedDays;
+
+    if (parentName.isNotEmpty && studentName.isNotEmpty) {
+      final updatedStudent = Student(
+        parentName: parentName,
+        parentPhoneNumber: parentPhoneNumber,
+        studentName: studentName,
+        classDays: classDays,
+      );
+      widget.onUpdateStudent(updatedStudent);
+      Navigator.of(context).pop();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('학생 수정'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _parentNameController,
+            decoration: InputDecoration(labelText: '학부모 이름'),
+          ),
+          TextField(
+            controller: _parentPhoneController,
+            decoration: InputDecoration(labelText: '학부모 전화번호'),
+            keyboardType: TextInputType.phone,
+          ),
+          TextField(
+            controller: _studentNameController,
+            decoration: InputDecoration(labelText: '학생 이름'),
+          ),
+          MultiSelectCheckbox(
+            selectedDays: _selectedDays,
+            onSelectionChanged: (days) {
+              setState(() {
+                _selectedDays = days;
+              });
+            },
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          child: Text('취소'),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        ElevatedButton(
+          child: Text('수정'),
+          onPressed: _onSubmit,
+        ),
+      ],
+    );
+  }
+}
+
+class MultiSelectCheckbox extends StatefulWidget {
+  final List<String> selectedDays;
+  final void Function(List<String>) onSelectionChanged;
+
+  MultiSelectCheckbox({
+    required this.selectedDays,
+    required this.onSelectionChanged,
+  });
+
+  @override
+  _MultiSelectCheckboxState createState() => _MultiSelectCheckboxState();
+}
+
+class _MultiSelectCheckboxState extends State<MultiSelectCheckbox> {
+  final List<String> _daysOfWeek = ['월', '화', '수', '목', '금', '토', '일'];
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: _daysOfWeek.map((day) {
+        return CheckboxListTile(
+          title: Text(day),
+          value: widget.selectedDays.contains(day),
+          onChanged: (bool? value) {
+            setState(() {
+              if (value == true) {
+                if (!widget.selectedDays.contains(day)) {
+                  widget.selectedDays.add(day);
+                }
+              } else {
+                widget.selectedDays.remove(day);
+              }
+              widget.onSelectionChanged(widget.selectedDays);
+            });
+          },
+        );
+      }).toList(),
     );
   }
 }
