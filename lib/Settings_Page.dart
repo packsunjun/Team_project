@@ -65,6 +65,16 @@ class _PageView5_SettingsState extends State<PageView5_Settings> {
           // 등하원 자동처리로 이동
           SwitchListTile(
             title: Text('등하원 자동처리'),
+            subtitle: Text(
+              '첫번째 출석체크 코드 입력시 등원처리 됩니다.\n'
+                  '두번째 출석체크 코드 입력시 하원처리 됩니다.\n'
+                  'OFF 하면 등원, 하원을 선택해서 출석체크하게 됩니다.',
+              style: TextStyle(
+                fontSize: 14,    // 글꼴 크기
+                color: Colors.grey, // 글꼴 색상
+                height: 1.5,     // 줄 간격
+              ),
+            ),
             value: _autoCheckInOut,
             onChanged: _toggleAutoCheckInOut,
             secondary: Icon(Icons.school),
@@ -75,6 +85,14 @@ class _PageView5_SettingsState extends State<PageView5_Settings> {
           ListTile(
             leading: Icon(Icons.code),
             title: Text('출석체크 코드 숨기기'),
+            subtitle: Text(
+              '입력한 출석체크 코드를 ● 기호로 표시합니다.',
+              style: TextStyle(
+                fontSize: 14,    // 글꼴 크기
+                color: Colors.grey, // 글꼴 색상
+                fontWeight: FontWeight.w400, // 글꼴 굵기
+              ),
+            ),
             trailing: IconButton(
               icon: Icon(_isCodeHidden ? Icons.visibility_off : Icons.visibility),
               onPressed: _toggleCodeVisibility,
@@ -82,6 +100,7 @@ class _PageView5_SettingsState extends State<PageView5_Settings> {
           ),
         ],
       ),
+
     );
   }
 }
