@@ -219,24 +219,43 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
   @override
   void initState() {
     super.initState();
+
+    // 학부모 전화번호 입력 제한 및 하이픈 자동 처리
     _parentPhoneController.addListener(() {
       final text = _parentPhoneController.text;
-      // 자동 하이픈 추가
-      if (text.length > 3 && !text.contains('-')) {
-        final formatted = text.replaceRange(3, 4, '-');
+      final newText = _formatPhoneNumber(text);
+
+      // 하이픈 포함 13자 제한
+      if (newText.length > 13) {
         _parentPhoneController.value = TextEditingValue(
-          text: formatted,
-          selection: TextSelection.fromPosition(TextPosition(offset: formatted.length)),
+          text: newText.substring(0, 13),
+          selection: TextSelection.fromPosition(
+            TextPosition(offset: newText.substring(0, 13).length),
+          ),
         );
-      }
-      // 입력 길이 제한
-      if (text.length > 13) { // 예를 들어, 13자는 하이픈 포함 11자리 전화번호
+      } else if (text != newText) {
         _parentPhoneController.value = TextEditingValue(
-          text: text.substring(0, 13),
-          selection: TextSelection.fromPosition(TextPosition(offset: text.substring(0, 13).length)),
+          text: newText,
+          selection: TextSelection.fromPosition(
+            TextPosition(offset: newText.length),
+          ),
         );
       }
     });
+  }
+
+  String _formatPhoneNumber(String text) {
+    final digitsOnly = text.replaceAll(RegExp(r'\D'), '');
+    final buffer = StringBuffer();
+
+    for (int i = 0; i < digitsOnly.length; i++) {
+      if (i == 3 || i == 7) {
+        buffer.write('-');
+      }
+      buffer.write(digitsOnly[i]);
+    }
+
+    return buffer.toString();
   }
 
   void _onSubmit() {
@@ -246,13 +265,13 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
     final classDays = _selectedDays;
 
     if (parentName.isNotEmpty && studentName.isNotEmpty) {
-      final student = Student(
+      final newStudent = Student(
         parentName: parentName,
         parentPhoneNumber: parentPhoneNumber,
         studentName: studentName,
         classDays: classDays,
       );
-      widget.onAddStudent(student);
+      widget.onAddStudent(newStudent);
       Navigator.of(context).pop();
     } else {
       // 유효성 검사 실패 시 알림
