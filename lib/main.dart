@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'Utility.dart';
 import 'KeyboardKey.dart'; // android
 
-
 class CustomKeyboardScreen extends StatefulWidget {
   @override
   _CustomKeyboardScreenState createState() => _CustomKeyboardScreenState();
@@ -29,7 +28,9 @@ class _CustomKeyboardScreenState extends State<CustomKeyboardScreen> {
 
   onNumberPress(val) {
     setState(() {
-      tnum = val;
+      if(tnum.length <= 3 ){
+      tnum += val;
+      }
     });
   }
 
@@ -46,6 +47,8 @@ class _CustomKeyboardScreenState extends State<CustomKeyboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
+          centerTitle: true,
+          title: Text('안민J컴퓨터'),
           actions: [
             Container(
               padding: EdgeInsets.fromLTRB(0, 0, 13, 0),
